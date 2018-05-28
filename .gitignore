@@ -105,4 +105,6 @@ ENV/
 .ftpconfig
 .ftpignore
 
+*/
+*
 !preproc.*
