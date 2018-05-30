@@ -17,6 +17,7 @@ output_dir = sys.argv[2]
 tmp_dir = 'tmp'
 results_dir = 'results'
 udpipe_model = sys.argv[3]
+files_n=100 #
 
 
 
@@ -113,24 +114,28 @@ def preproc(text_list, modelfile):
         sanitized_texts.append(sanitized_sentences)
     return sanitized_texts
 
-sanitized_texts = preproc(texts[:5], udpipe_model)
-files_n=100
-articles_per_file = len(sanitized_texts)//files_n + 1
+sanitized_texts = preproc(texts, udpipe_model)
+
+
+articles_per_file = max(len(sanitized_texts)//files_n,1)
 split_points = list(range(0,len(sanitized_texts),articles_per_file))
-split_points = split_points if len(sanitized_texts) % articles_per_file == 0 else split_points + [len(sanitized_texts)]
+split_points[-1] = None
 
 def write_articles_to_file(artcs, file_path, eoa_tag):
-    with open(file_path,'wt') as f:
+    with open(file_path,'wt', encoding="utf-8") as f:
         for artc in artcs[:-1]:
-            for line in artc:
+            for line in artc[:-1]:
                 f.write(' '.join(line)+'\n')
+            f.write(' '.join(artc[-1]))
             f.write(eoa_tag+'\n')
         # write last article without tag
         for line in artcs[-1][:-1]:
                 f.write(' '.join(line)+'\n')
         # write last line without newline
-        f.write(' '.join(artcs[-1][-1])+)
+        f.write(' '.join(artcs[-1][-1]))
 
 
-for indx, (start, end) in enumerate(zip(split_points[:-1], split_points[1:])):
-    write_articles_to_file(sanitized_texts[start:end], 'prts_{}.txt'.format(str(indx).zfill(6)), '<NEXT_PAPER>')
+for indx, (start, end) in enumerate(zip(split_points[:-1], split_points[1:]), 1):
+    file_path = os.path.join(results_dir, 'prts_{}.txt'.format(str(indx).zfill(6)))
+    if sanitized_texts[start:end]:
+        write_articles_to_file(sanitized_texts[start:end], file_path, '<NEXT_PAPER>')
